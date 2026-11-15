@@ -83,7 +83,11 @@
                     statusDiv.innerText = `🎉 點名成功！歡迎 ${name} (${id})`;
                     statusDiv.style.color = "green";
                 }
-            });
+            })
+            .catch(err => {
+           statusDiv.innerText = "❌ 無法連線到後端！請檢查 Cloudflare 網址是否更新";
+           statusDiv.style.color = "red";
+       });
         } else {
             statusDiv.style.color = "#555";
             statusDiv.innerText = "🔍 未偵測到人臉，請正對鏡頭...";
