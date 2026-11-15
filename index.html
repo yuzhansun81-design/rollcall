@@ -49,7 +49,7 @@
     async function init() {
         const MODEL_URL = 'https://unpkg.com/@vladmandic/face-api/model/';
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-        await faceapi.nets.faceLandmark64Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
         modelsLoaded = true;
         statusDiv.innerText = "🔍 系統就緒，請正對鏡頭進行自動點名...";
