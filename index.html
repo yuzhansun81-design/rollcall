@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <title>AI 人臉識別全功能點名系統</title>
+    <script defer src="https://jsdelivr.net"></script>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f6f9; padding: 20px; display: flex; flex-direction: column; align-items: center; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 550px; margin-bottom: 20px; text-align: center; }
+        video { width: 100%; border-radius: 8px; transform: scaleX(-1); background: #222; }
+        input, button { padding: 10px; margin: 5px; font-size: 16px; border-radius: 5px; border: 1px solid #ccc; }
+        button { background-color: #007BFF; color: white; cursor: pointer; border: none; }
+        button:hover { background-color: #0056b3; }
+        .btn-green { background-color: #28a745; }
+        .btn-green:hover { background-color: #218838; }
+        #status, #logView { font-weight: bold; margin-top: 10px; white-space: pre-wrap; text-align: left; background: #eee; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <h2>📷 1. 刷臉簽到區</h2>
+        <video id="webcam" autoplay playsinline></video>
+        <div id="status">🤖 正在加載 AI 模型...</div>
+    </div>
+
+    <div class="card">
+        <h2>👤 2. 新增學生與人臉註冊</h2>
+        <input type="text" id="stuId" placeholder="請輸入學號 (如 101)">
+        <input type="text" id="stuName" placeholder="請輸入姓名 (如 張三)">
+        <br>
+        <button class="btn-green" onclick="registerFace()">🎯 擷取當前人臉並註冊</button>
+    </div>
+
+    <div class="card">
+        <h2>📊 3. 點名紀錄查詢</h2>
+        <button onclick="fetchRecords()">🔍 刷新點名簿紀錄</button>
+        <div id="logView">點擊上方按鈕獲取 C 語言後端即時紀錄...</div>
+    </div>
+
+<script>
+    const video = document.getElementById('webcam');
+    const statusDiv = document.getElementById('status');
+    const logView = document.getElementById('logView');
+    let modelsLoaded = false;
+    
+    const SERVER_URL = "http://localhost:8080"; 
+
+    async function init() {
+        const MODEL_URL = 'https://jsdelivr.net';
+        await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceLandmark64Net.loadFromUri(MODEL_URL);
+        await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
+        modelsLoaded = true;
+        statusDiv.innerText = "🔍 系統就緒，請正對鏡頭進行自動點名...";
+        
+        navigator.mediaDevices.getUserMedia({ video: {} })
+            .then(stream => { 
+                video.srcObject = stream; 
+                setInterval(autoCheckIn, 3000); 
+            });
+    }
+
+    async function autoCheckIn() {
+        if (!modelsLoaded) return;
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        
+        if (detection) {
+            statusDiv.innerText = "⚡ 辨識中...";
+            const features = detection.descriptor.join(","); 
+            
+            fetch(`${SERVER_URL}/checkin`, {
+                method: "POST",
+                body: features
+            })
+            .then(res => res.text())
+            .then(data => {
+                if (data === "UNKNOWN") {
+                    statusDiv.innerText = "❌ 辨識失敗：資料庫查無此人，請先在下方註冊！";
+                    statusDiv.style.color = "red";
+                } else if (data.startsWith("SUCCESS")) {
+                    const [_, id, name] = data.split(",");
+                    statusDiv.innerText = `🎉 點名成功！歡迎 ${name} (${id})`;
+                    statusDiv.style.color = "green";
+                }
+            });
+        } else {
+            statusDiv.style.color = "#555";
+            statusDiv.innerText = "🔍 未偵測到人臉，請正對鏡頭...";
+        }
+    }
+
+    async function registerFace() {
+        const id = document.getElementById('stuId').value;
+        const name = document.getElementById('stuName').value;
+        if(!id || !name) { alert("請先填寫學號與姓名！"); return; }
+
+        statusDiv.innerText = "📸 正在掃描人臉特徵...";
+        const detection = await faceapi.detectSingleFace(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptor();
+        
+        if (detection) {
+            const featuresStr = detection.descriptor.join("|");
+            const postBody = `id=${encodeURIComponent(id)}&name=${encodeURIComponent(name)}&features=${featuresStr}`;
+
+            fetch(`${SERVER_URL}/register`, {
+                method: "POST",
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: postBody
+            })
+            .then(res => res.text())
+            .then(data => {
+                if(data === "REGISTER_SUCCESS") {
+                    alert(`註冊成功: ${name} (${id}) 的人臉特徵已寫入 C 語言資料庫！`);
+                    document.getElementById('stuId').value = "";
+                    document.getElementById('stuName').value = "";
+                }
+            });
+        } else {
+            alert("註冊失敗：畫面上沒看到人臉，請對準鏡頭再試一次！");
+        }
+    }
+
+    function fetchRecords() {
+        fetch(`${SERVER_URL}/records`)
+            .then(res => res.text())
+            .then(data => {
+                logView.innerText = data;
+            })
+            .catch(() => { logView.innerText = "連線失敗，請確認後端正在執行。"; });
+    }
+
+    init();
+</script>
+</body>
+</html>
