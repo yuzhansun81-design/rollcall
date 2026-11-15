@@ -71,6 +71,7 @@
             
             fetch(`${SERVER_URL}/checkin`, {
                 method: "POST",
+                headers: { 'Content-Type': 'text/plain' },
                 body: features
             })
             .then(res => res.text())
@@ -108,7 +109,7 @@
 
             fetch(`${SERVER_URL}/register`, {
                 method: "POST",
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                headers: { 'Content-Type': 'text/plain' },
                 body: postBody
             })
             .then(res => res.text())
