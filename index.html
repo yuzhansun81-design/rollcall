@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>AI 人臉識別全功能點名系統</title>
-    <script>document.write('<script src="https://cdn.js' + 'delivr.net/npm/@vladmandic/face-api/dist/face-api.js"><\/script>');</script>
+    <script src="https://unpkg.com/@vladmandic/face-api/dist/face-api.js"></script>
     <style>
         body { font-family: sans-serif; background-color: #f4f6f9; padding: 20px; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 100%; max-width: 550px; margin-bottom: 20px; text-align: center; }
@@ -47,7 +47,7 @@
     const SERVER_URL = "https://groundwater-whole-comfortable-alan.trycloudflare.com";
 
     async function init() {
-        const MODEL_URL = 'https://cdn.js' + 'delivr.net/npm/@vladmandic/face-api/model/';
+        const MODEL_URL = 'https://unpkg.com/@vladmandic/face-api/model/';
         await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
         await faceapi.nets.faceLandmark64Net.loadFromUri(MODEL_URL);
         await faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL);
