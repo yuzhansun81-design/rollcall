@@ -44,7 +44,7 @@
     const logView = document.getElementById('logView');
     let modelsLoaded = false;
     
-    const SERVER_URL = "https://testing-trained-aye-rio.trycloudflare.com";
+    const SERVER_URL = "https://typing-diet-tcp-told.trycloudflare.com";
 
     async function init() {
         const MODEL_URL = 'https://unpkg.com/@vladmandic/face-api/model/';
@@ -81,7 +81,7 @@
                     statusDiv.style.color = "red";
                 } else if (data.startsWith("SUCCESS")) {
                     const [_, id, name] = data.split(",");
-                    statusDiv.innerText = `🎉 點名成功！歡迎 ${name} (${id})`;
+                    statusDiv.innerText = `🎉 點名成功！歡迎 ${decodeURIComponent(name)} (${id})`;
                     statusDiv.style.color = "green";
                 }
             })
@@ -129,7 +129,11 @@
         fetch(`${SERVER_URL}/records`)
             .then(res => res.text())
             .then(data => {
-                logView.innerText = data;
+                const cleanText = decodeURIComponent(data)
+    .replace(/ID:/g, "學號:")
+    .replace(/Name:/g, "姓名:")
+    .replace(/Status: Checked-in/g, "狀態: 已簽到");
+logView.innerText = cleanText;
             })
             .catch(() => { logView.innerText = "連線失敗，請確認後端正在執行。"; });
     }
